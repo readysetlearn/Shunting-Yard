@@ -40,6 +40,7 @@ void testShuntingYard()
 		{"(3)","3"},
 		{"(10 + 3)","10 3 +"},
 		{"10.5-9.8","10.5 9.8 -"},
+		{"(12)(15)", "12 15"},
 		{"",""}
     };
 
@@ -50,9 +51,9 @@ void testShuntingYard()
         std::string outputStr = queueToString(output);
 
         if (outputStr == testCase.expectedOutput) {
-            std::cout << "Test passed for input: " << input << std::endl;
+            std::cout << "Test passed for input: '" << input << "'" << std::endl;
         } else {
-            std::cout << "Test failed for input: " << input << std::endl;
+            std::cout << "Test failed for input: '" << input << "'" << std::endl;
             std::cout << "Expected: '" << testCase.expectedOutput << "'" << std::endl;
             std::cout << "Got: '" << outputStr << "'" << std::endl;
         }
