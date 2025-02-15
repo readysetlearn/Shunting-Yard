@@ -40,8 +40,8 @@ class Token
 		Associativity getAssociativity() const { return associativity; }
 		
 	private:
-		const Type type;
-		const std::string value;
+		Type type;
+		std::string value;
 		short precedence;
 		Associativity associativity;
 		bool unary;
@@ -89,6 +89,18 @@ class Token
 		}
 };
 
+/* Return true if an implicit multiplication exists between the previous token and the current one
+	Examples: (2)(3), 2(3), (2)3 */
+bool isImpliedMultiplication(const Token& pre, const Token& cur)
+{
+	//std::cout << "previous token: " << pre.getValue() << " current token: " << cur.getValue() << std::endl;
+	if(pre.getValue() == ")" && cur.getValue() == "(") return true; // e.g. (2)(3)
+	if(pre.getType() == Token::NUMBER && cur.getValue() == "(") return true; // e.g. 2(3)
+	if(pre.getValue() == ")" && cur.getType() == Token::NUMBER) return true; // e.g. (2)3
+    // if(pre.getType() == Token::NUMBER && cur.getType() == Token::NUMBER) return true;
+	return false;
+}
+
 
 /*converts an infinx expression to a postfix expression*/
 std::queue<Token> shuntingYard(std::string& expr)
@@ -96,13 +108,16 @@ std::queue<Token> shuntingYard(std::string& expr)
 	std::queue<Token> output;
 	std::stack<Token> operators;
 	std::string number;
+	Token previous = Token(Token::NUMBER, "-1"); // Arbitrary value for starting
+	bool firstIteration = true; // Used with isImpliedMultiplication()
+	const auto isNum = previous; // Arbitrary number type token
 	
 	for(auto c : expr)
 	{
 		if (std::isspace(static_cast<unsigned char>(c))) {
             continue; // Skip this iteration if c is whitespace
         }
-		else if(std::isdigit(c) || c == '.')
+		if(std::isdigit(c) || c == '.')
 		{
 			number += c;
 		}
@@ -112,6 +127,7 @@ std::queue<Token> shuntingYard(std::string& expr)
 			{
 				output.push(Token(Token::NUMBER, number));
 				number.clear();
+				previous = isNum;
 			}
 			Token t(Token::OPERATOR, c);
 			while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
@@ -120,10 +136,22 @@ std::queue<Token> shuntingYard(std::string& expr)
 				operators.pop();
 			}
 			operators.push(t);
+			previous = t;
 		}
 		else if(c == '(')
 		{
+			if(!number.empty())
+			{
+				output.push(Token(Token::NUMBER, number));
+				number.clear();
+				previous = isNum;
+			}
+			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, '(')))
+			{
+				operators.push(Token(Token::OPERATOR, '*'));
+			}
 			operators.push(Token(Token::PARENTHESIS, '('));
+			previous = Token(Token::PARENTHESIS, '(');
 		}
 		else if(c == ')')
 		{
@@ -131,6 +159,11 @@ std::queue<Token> shuntingYard(std::string& expr)
 			{
 				output.push(Token(Token::NUMBER, number));
 				number.clear();
+				previous = isNum;
+			}
+			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, ')')))
+			{
+				operators.push(Token(Token::OPERATOR, '*'));
 			}
 			while(operators.top().getValue() != "(")
 			{
@@ -140,12 +173,14 @@ std::queue<Token> shuntingYard(std::string& expr)
 			}
 			assert(operators.top().getValue() == "(" && "Expected '('");
 			operators.pop(); // Pop the '('
+			previous = Token(Token::PARENTHESIS, ')');
 		}
 		else
 		{
 			// uh oh
-			throw std::runtime_error("Invalid token: " + c);
+			throw std::runtime_error("Invalid token: " + std::string(1, c));
 		}
+		firstIteration = false;
 	}
 	
 	// Handle last token being a number
@@ -153,6 +188,10 @@ std::queue<Token> shuntingYard(std::string& expr)
 	{
 		output.push(Token(Token::NUMBER, number));
 		number.clear();
+		if(!firstIteration && isImpliedMultiplication(previous, isNum))
+		{
+			output.push(Token(Token::OPERATOR, '*'));
+		}
 	}
 	
 	while(!operators.empty())
