@@ -93,11 +93,9 @@ class Token
 	Examples: (2)(3), 2(3), (2)3 */
 bool isImpliedMultiplication(const Token& pre, const Token& cur)
 {
-	//std::cout << "previous token: " << pre.getValue() << " current token: " << cur.getValue() << std::endl;
 	if(pre.getValue() == ")" && cur.getValue() == "(") return true; // e.g. (2)(3)
 	if(pre.getType() == Token::NUMBER && cur.getValue() == "(") return true; // e.g. 2(3)
 	if(pre.getValue() == ")" && cur.getType() == Token::NUMBER) return true; // e.g. (2)3
-    // if(pre.getType() == Token::NUMBER && cur.getType() == Token::NUMBER) return true;
 	return false;
 }
 
@@ -109,8 +107,8 @@ std::queue<Token> shuntingYard(std::string& expr)
 	std::stack<Token> operators;
 	std::string number;
 	Token previous = Token(Token::NUMBER, "-1"); // Arbitrary value for starting
-	bool firstIteration = true; // Used with isImpliedMultiplication()
-	const auto isNum = previous; // Arbitrary number type token
+	bool firstIteration = true; // Used by isImpliedMultiplication()
+	const auto isNum = previous; // Arbitrary token with type number
 	
 	for(auto c : expr)
 	{

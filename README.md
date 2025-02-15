@@ -6,6 +6,7 @@ C++ implementation of the Shunting Yard algorithm for parsing mathematical expre
 ## Features
 - Supports the following operators: `+`, `-`, `*`, `/`, `^`, `!`, and parentheses `(`, `)`
 - Handles numbers with decimals (e.g., `2.3`)
+- Handles multiplication between parentheses (e.g. `(3)(5)`, `3(5)` and `(3)5`)
 - Main function to call: `std::queue<Token> shuntingYard(std::string& expr)` located in `ShuntingYard.cpp`
 
 ## Usage
