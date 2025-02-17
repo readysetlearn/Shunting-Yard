@@ -33,11 +33,19 @@ class Token
 			}
 		}
 		
+		// Constructor for unary negation operator (e.g. the '-' in '-5')
+		Token() : type(OPERATOR), value("-"), precedence(4), associativity(RIGHT), unary(true)
+		{
+			// Note: This constructor assumes that the unary negation operator has already been validated elsewhere
+		}
+
+		
 		// const member functions
 		Type getType() const { return type; }
 		std::string getValue() const { return value; }
 		short getPrecedence() const { return precedence; }
 		Associativity getAssociativity() const { return associativity; }
+		bool isUnary() const { return unary; }
 		
 	private:
 		Type type;
@@ -46,13 +54,13 @@ class Token
 		Associativity associativity;
 		bool unary;
 		
-		// Function to determine the precedence of an operator. Higher the number the higher the precedence.
+		// Function to determine the precedence of an operator. The higher the number, the higher the precedence, the sooner they get evaluated.
 		short setPrecedence (char op) const
 		{
 			switch (op)
 			{
 				case '+':
-				case '-':
+				case '-': // This is binary subtraction, not unary negation
 					return 1;
 				case '*':
 				case '/':
@@ -60,10 +68,10 @@ class Token
 				case '^':
 					return 3;
 				case '!':
-					return 4;
+					return 5; // Precedence level 4 is used for unary negation
 				case '(':
 				case ')':
-					return 5;
+					return 6;
 				default:
 					throw std::invalid_argument("Error: Operator '" + std::string(1, op) + "' is not recognized.");
 			}
@@ -127,7 +135,15 @@ std::queue<Token> shuntingYard(std::string& expr)
 				number.clear();
 				previous = isNum;
 			}
-			Token t(Token::OPERATOR, c);
+			Token t;
+			// Determine whether token is unary negation or binary operator
+			if (c == '-' && (firstIteration || previous.getType() != Token::NUMBER))
+			{
+				// Immediately push unary negation to output because it's a prefix operator
+				output.push(t);
+				continue;
+			}
+			t = Token(Token::OPERATOR, c);
 			while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
 			{
 				output.push(Token(Token::OPERATOR, operators.top().getValue()));
