@@ -1,17 +1,27 @@
 # Shunting-Yard
 
 ## Overview
-C++ implementation of the Shunting Yard algorithm for parsing mathematical expressions.
+Implementation of the Shunting Yard algorithm in C++. Converts infinx expressions to postfix expressions. 
 
 ## Features
-- Supports the following operators: `+`, `-`, `*`, `/`, `^`, `!`, and parentheses `(`, `)`
-- Handles numbers with decimals (e.g., `2.3`)
-- Handles multiplication between parentheses (e.g. `(3)(5)`, `3(5)` and `(3)5`)
+
+- Supports the following binary operators: `+`, `-`, `*`, `/`, `^`
+- Supports the following unary operators: `-`, `!`
+- Supports parentheses: `(`, `)`
+- Supports multiplication between parentheses (e.g. `(3)(5)`, `3(5)` and `(3)5`)
+- Supports numbers with decimals (e.g., `2.3`)
 - Main function to call: `std::queue<Token> shuntingYard(std::string& expr)` located in `ShuntingYard.cpp`
 
-## Usage
-To compile and run the code, use the following commands:
+## Testing
+
+- A suite of test cases is provided to ensure the implementation is correct. Below are the steps for running the tests:
+
+### Running Tests
 
 ```bash
 g++ -o Test_Shunting_Yard Test_Shunting_Yard.cpp
-./Test_Shunting_Yard
+./Test_Shunting_Yard```
+
+
+## Known Limitations
+- Input expressions are not validated for correctness. For example, `^5` has ouptut `5^` without any errors.
