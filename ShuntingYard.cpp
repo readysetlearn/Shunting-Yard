@@ -25,7 +25,7 @@ class Token
 			}
 		}
 
-		Token(Type type, const char value) : type(type), value(std::string(1, value)), precedence(setPrecedence(value)), associativity(setAssociativity(value))
+		Token(Type type, const char value) : type(type), value(std::string(1, value)), precedence(setPrecedence(value)), associativity(setAssociativity(value)), unary((value == '!') ? true : false)
 		{
 			if (value == '\0') // Check for null character
 			{
@@ -36,7 +36,7 @@ class Token
 		// Constructor for unary negation operator (e.g. the '-' in '-5')
 		Token() : type(OPERATOR), value("-"), precedence(4), associativity(RIGHT), unary(true)
 		{
-			// Note: This constructor assumes that the unary negation operator has already been validated elsewhere
+			// Note: this constructor does not do any validation
 		}
 
 		
@@ -101,9 +101,11 @@ class Token
 	Examples: (2)(3), 2(3), (2)3 */
 bool isImpliedMultiplication(const Token& pre, const Token& cur)
 {
-	if(pre.getValue() == ")" && cur.getValue() == "(") return true; // e.g. (2)(3)
-	if(pre.getType() == Token::NUMBER && cur.getValue() == "(") return true; // e.g. 2(3)
-	if(pre.getValue() == ")" && cur.getType() == Token::NUMBER) return true; // e.g. (2)3
+    if(pre.getValue() == ")" && cur.getValue() == "(") return true; // e.g. (2)(3)
+    if(pre.getType() == Token::NUMBER && cur.getValue() == "(") return true; // e.g. 2(3)
+    if(pre.getValue() == ")" && cur.getType() == Token::NUMBER) return true; // e.g. (2)3
+    if(pre.getValue() == "!" && cur.getValue() == "(") return true; // e.g. 3!(4)
+    if(pre.getValue() == ")" && cur.getValue() == "!") return true; // e.g. (4)3!
 	return false;
 }
 
@@ -125,9 +127,29 @@ std::queue<Token> shuntingYard(std::string& expr)
         }
 		if(std::isdigit(c) || c == '.')
 		{
+			if(!operators.empty() && operators.top().isUnary() && operators.top().getValue() == "-")
+			{
+				output.push(operators.top());
+				operators.pop();
+			}
 			number += c;
 		}
-		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '!')
+		else if(c == '!') // Factorial has highest precedence and doesn't go on the operator stack
+		{
+			if(previous.getValue() == ")")
+			{
+				operators.push(Token(Token::OPERATOR, '*')); // Implicit multiplication e.g. (2)3!
+			}
+			if(!number.empty())
+			{
+				output.push(Token(Token::NUMBER, number));
+				number.clear();
+			}
+
+			output.push(Token(Token::OPERATOR, '!'));
+			previous = Token(Token::OPERATOR, '!');
+		}
+		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
 		{
 			if(!number.empty())
 			{
@@ -135,18 +157,11 @@ std::queue<Token> shuntingYard(std::string& expr)
 				number.clear();
 				previous = isNum;
 			}
-			Token t;
 			// Determine whether token is unary negation or binary operator
-			if (c == '-' && (firstIteration || previous.getType() != Token::NUMBER))
-			{
-				// Immediately push unary negation to output because it's a prefix operator
-				output.push(t);
-				continue;
-			}
-			t = Token(Token::OPERATOR, c);
+			Token t = (c == '-' && (firstIteration || previous.getType() != Token::NUMBER)) ? Token() : Token(Token::OPERATOR, c);
 			while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
 			{
-				output.push(Token(Token::OPERATOR, operators.top().getValue()));
+				output.push(operators.top());
 				operators.pop();
 			}
 			operators.push(t);
@@ -159,6 +174,11 @@ std::queue<Token> shuntingYard(std::string& expr)
 				output.push(Token(Token::NUMBER, number));
 				number.clear();
 				previous = isNum;
+			}
+			if(!operators.empty() && operators.top().isUnary() && operators.top().getValue() == "-")
+			{
+				output.push(operators.top());
+				operators.pop();
 			}
 			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, '(')))
 			{
