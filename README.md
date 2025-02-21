@@ -1,7 +1,7 @@
 # Shunting-Yard
 
 ## Overview
-Implementation of the Shunting Yard algorithm in C++. Converts infinx expressions to postfix expressions. 
+Implementation of the [Shunting Yard algorithm](https://en.wikipedia.org/wiki/Shunting_yard_algorithm) in C++. Converts infinx expressions to [postfix expressions](https://en.wikipedia.org/wiki/Reverse_Polish_notation). 
 
 ## Features
 
@@ -18,9 +18,11 @@ Implementation of the Shunting Yard algorithm in C++. Converts infinx expression
 
 ### Running Tests
 
-```bash
+```
+bash
 g++ -o Test_Shunting_Yard Test_Shunting_Yard.cpp
-./Test_Shunting_Yard```
+./Test_Shunting_Yard
+```
 
 
 ## Known Limitations
