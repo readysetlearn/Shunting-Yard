@@ -85,9 +85,43 @@ void testShuntingYard()
     }
 }
 
+void testEvaluator()
+{
+	struct TestCase {
+		std::string expression; // The mathematical expression as a string
+		long double expectedResult; // The expected result of the expression
+	};
+
+	// Initialize a vector of TestCase
+	std::vector<TestCase> testCases = {
+		{"2 + 3", 5},
+		{"6 - 5", 1},
+		{"10 - 8", 2},
+		{"555 - 123", 432},
+		{"3 * 4", 12},
+		{"3 * 2 - 1", 5},
+		{"1 + 2 + 2", 5}
+	};
+
+	
+    // Loop through each test case and check the result
+    for (const auto& testCase : testCases) {
+        long double result = expression_evaluator(testCase.expression);
+        if (result != testCase.expectedResult) {
+            std::cout << "Failure: Expression \"" << testCase.expression 
+                      << "\" evaluated to " << result 
+                      << ", but expected " << testCase.expectedResult << std::endl;
+        } else {
+            std::cout << "Success: Expression \"" << testCase.expression 
+                      << "\" evaluated correctly to " << result << std::endl;
+        }
+    }
+}
+
 int main()
 {
 	std::cout << "Tests started: " << std::endl;
 	testShuntingYard();
+	testEvaluator();
 	return 0;
 }
