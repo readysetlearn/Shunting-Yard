@@ -130,7 +130,6 @@ unsigned long long factorial(const unsigned long long n)
 
 long double performOperation(const Token op, const long double numLeft, const long double numRight = 0.0)
 {
-	std::cout << "inside performOperation" << std::endl;
 	std::cout << "op: " << op.getValue() << " numeLeft: " << numLeft << " numRight: " << numRight << std::endl;
     if(op.getType() != Token::OPERATOR)
     {
@@ -139,7 +138,6 @@ long double performOperation(const Token op, const long double numLeft, const lo
     
     if(op.isUnary()) // Unary operator
     {
-		std::cout << "here 1" << std::endl;
         switch(op.getValue()[0]) // Convert return value of getValue() to char for use in switch
         {
             case '-':
@@ -155,8 +153,7 @@ long double performOperation(const Token op, const long double numLeft, const lo
     }
     else // Binary operator
     {
-		std::cout << "here 2" << std::endl;
-		std::cout << "operator: " << op.getValue()[0] << std::endl;
+
         switch(op.getValue()[0])
         {
             case '+':
@@ -325,11 +322,13 @@ long double evaluatePostfix(std::queue<Token> postfix)
 			if(t.isUnary())
 			{
 				std::cout << "unary detected" << std::endl;
-				if(output.size() < 1) // start of expression starts with unary negation
+				if(output.size() < 1) // Start of expression starts with unary negation
 				{
-					// if the first term is negative, add an implicit 0 at start e.g. -2+3 is 0-2+3
-					output.push(performOperation(t, 0, output.top()));
-					output.pop();
+					// If the first term is negative, add an implicit 0 at start e.g. -2+3 is 0-2+3
+					const auto result = performOperation(Token(Token::OPERATOR, '-'), 0, std::stold(postfix.front().getValue())); // Can't use t here because it's the unary negation but we want binary subtraction
+					std::cout << "result: " << result << std::endl;
+					output.push(result);
+					postfix.pop();
 				}
 				else
 				{
