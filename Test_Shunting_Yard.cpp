@@ -18,6 +18,8 @@ std::string queueToString(std::queue<Token> q)
 
 void testShuntingYard()
 {
+	std::cout << "Now testing ShuntingYard function" << std::endl;
+	
     struct TestCase {
         std::string input;
         std::string expectedOutput;
@@ -87,6 +89,8 @@ void testShuntingYard()
 
 void testEvaluator()
 {
+	std::cout << "Now testing evaluatePostfix function" << std::endl;
+	
 	struct TestCase {
 		std::string expression; // The mathematical expression as a string
 		long double expectedResult; // The expected result of the expression
@@ -100,13 +104,30 @@ void testEvaluator()
 		{"555 - 123", 432},
 		{"3 * 4", 12},
 		{"3 * 2 - 1", 5},
-		{"1 + 2 + 2", 5}
+		{"1 + 2 + 2", 5},
+		{"5 * 2 - 1", 9},
+		{"3 * 4 - 1", 11},
+		{"1 + 2 + 3", 6},
+		{"2 + 3", 5},
+		{"5 - 2", 3},
+		{"4 * 3", 12},
+		{"8 / 2", 4},
+		{"(2 + 3) * 5", 25},
+		{"5 + (1 + 2) * 4 - 3", 14},
+		{"2.5 + 3.5", 6.0},
+		{"(3 + 4) * 2 / 7", 2}, // (3 + 4) * 2 / 7
+		{"(2 + 3) * (4 + 5)", 45}, // (2 + 3) * (4 + 5)
+		{"(2 + 3) + (4 + 5) + 6", 20}, // (2 + 3) + (4 + 5) + 6
+		{"-2 + 3", 1}, // -2 + 3
+		{"5 - 2 + 3", 6}, // 5 - 2 + 3
+		{"5 - (2 + 3)", 0}
+
 	};
 
 	
     // Loop through each test case and check the result
     for (const auto& testCase : testCases) {
-        long double result = expression_evaluator(testCase.expression);
+        long double result = evaluatePostfix(shuntingYard(testCase.expression));
         if (result != testCase.expectedResult) {
             std::cout << "Failure: Expression \"" << testCase.expression 
                       << "\" evaluated to " << result 
@@ -123,5 +144,6 @@ int main()
 	std::cout << "Tests started: " << std::endl;
 	testShuntingYard();
 	testEvaluator();
+	std::cout << "Done" << std::endl;
 	return 0;
 }

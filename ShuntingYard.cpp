@@ -53,7 +53,7 @@ class Token
 		std::string value;
 		short precedence;
 		Associativity associativity;
-		bool unary;
+		bool unary = false;
 		
 		// Function to determine the precedence of an operator. The higher the number, the higher the precedence, the sooner they get evaluated.
 		short setPrecedence (char op) const
@@ -130,6 +130,8 @@ unsigned long long factorial(const unsigned long long n)
 
 long double performOperation(const Token op, const long double numLeft, const long double numRight = 0.0)
 {
+	std::cout << "inside performOperation" << std::endl;
+	std::cout << "op: " << op.getValue() << " numeLeft: " << numLeft << " numRight: " << numRight << std::endl;
     if(op.getType() != Token::OPERATOR)
     {
         throw std::invalid_argument("Token is not an operator: " + op.getValue());
@@ -137,6 +139,7 @@ long double performOperation(const Token op, const long double numLeft, const lo
     
     if(op.isUnary()) // Unary operator
     {
+		std::cout << "here 1" << std::endl;
         switch(op.getValue()[0]) // Convert return value of getValue() to char for use in switch
         {
             case '-':
@@ -152,6 +155,8 @@ long double performOperation(const Token op, const long double numLeft, const lo
     }
     else // Binary operator
     {
+		std::cout << "here 2" << std::endl;
+		std::cout << "operator: " << op.getValue()[0] << std::endl;
         switch(op.getValue()[0])
         {
             case '+':
@@ -177,7 +182,7 @@ long double performOperation(const Token op, const long double numLeft, const lo
 
 
 /*converts an infinx expression to a postfix expression*/
-std::queue<Token> shuntingYard(std::string& expr)
+std::queue<Token> shuntingYard(const std::string& expr)
 {
 	std::queue<Token> output;
 	std::stack<Token> operators;
@@ -303,167 +308,59 @@ std::queue<Token> shuntingYard(std::string& expr)
 	return output;
 }
 
-/* Evaluates a math expression.
-This function is very similar to shuntingYard(). */
-long double expression_evaluator(const std::string& expr)
+long double evaluatePostfix(std::queue<Token> postfix)
 {
-	std::stack<Token> operands;
-	std::stack<Token> operators;
-	std::string number;
-	Token previous = Token(Token::NUMBER, "-1"); // Arbitrary value for starting
-	bool firstIteration = true; // Used by isImpliedMultiplication()
-	const auto isNum = previous; // Arbitrary token with type number
-	
-	for(auto c : expr)
+	std::stack<double> output;
+	while(!postfix.empty())
 	{
-		if (std::isspace(static_cast<unsigned char>(c))) {
-            continue; // Skip this iteration if c is whitespace
-        }
-		if(std::isdigit(c) || c == '.')
+		Token t = postfix.front();
+		postfix.pop();
+		
+		if(t.getType() == Token::NUMBER)
 		{
-			if(!operators.empty() && operators.top().isUnary() && operators.top().getValue() == "-")
-			{
-				operands.push(operators.top());
-				operators.pop();
-			}
-			number += c;
+			output.push(std::stold(t.getValue()));
 		}
-		else if(c == '!') // Factorial has highest precedence and doesn't go on the operator stack
+		else if(t.getType() == Token::OPERATOR)
 		{
-			if(previous.getValue() == ")")
+			if(t.isUnary())
 			{
-				operators.push(Token(Token::OPERATOR, '*')); // Implicit multiplication e.g. (2)3!
-			}
-			if(!number.empty())
-			{
-				operands.push(Token(Token::NUMBER, number));
-				number.clear();
-			}
-
-			operands.push(Token(Token::OPERATOR, '!'));
-			previous = Token(Token::OPERATOR, '!');
-		}
-		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
-		{
-			if(!number.empty())
-			{
-				operands.push(Token(Token::NUMBER, number));
-				number.clear();
-				previous = isNum;
-			}
-			// Determine whether token is unary negation or binary operator
-			Token t = (c == '-' && (firstIteration || previous.getType() != Token::NUMBER)) ? Token() : Token(Token::OPERATOR, c);
-			if (t.isUnary())
-			{
-				operands.push(t);
+				std::cout << "unary detected" << std::endl;
+				if(output.size() < 1) // start of expression starts with unary negation
+				{
+					// if the first term is negative, add an implicit 0 at start e.g. -2+3 is 0-2+3
+					output.push(performOperation(t, 0, output.top()));
+					output.pop();
+				}
+				else
+				{
+					const auto num = output.top(); 
+					output.pop(); // only pop one number for unary operation
+					const auto result = performOperation(t, num);
+					std::cout << "returned value after operation: " << result << std::endl;
+					output.push(result);
+					std::cout << "done operation" << std::endl;
+				}
 			}
 			else
 			{
-				while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
-				{
-					operands.push(operators.top());
-					operators.pop();
+				if (output.size() < 2) {
+					throw std::runtime_error("Error: Insufficient values in the expression.");
 				}
-				operators.push(t);
+				
+				const auto numRight = output.top();
+				output.pop();
+				const auto numLeft = output.top();
+				output.pop();
+				output.push(performOperation(t, numLeft, numRight));
 			}
-			previous = t;
 		}
-		else if(c == ')')
-		{
-			if(!number.empty())
-			{
-				operands.push(Token(Token::NUMBER, number));
-				number.clear();
-				previous = isNum;
-			}
-			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, ')')))
-			{
-				operators.push(Token(Token::OPERATOR, '*'));
-			}
-			while(operators.top().getValue() != "(")
-			{
-				operands.push(operators.top());
-				operators.pop();
-				assert(!operators.empty() && "Mismatched parentheses");
-			}
-			assert(operators.top().getValue() == "(" && "Expected '('");
-			operators.pop(); // Pop the '('
-			previous = Token(Token::PARENTHESIS, ')');
-		}
-
-		else if(c == ')')
-		{
-			if(!number.empty())
-			{
-				operands.push(Token(Token::NUMBER, number));
-				number.clear();
-				previous = isNum;
-			}
-			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, ')')))
-			{
-				operators.push(Token(Token::OPERATOR, '*'));
-			}
-			while(operators.top().getValue() != "(")
-			{
-				operands.push(Token(Token::OPERATOR, operators.top().getValue()));
-				operators.pop();
-				assert(!operators.empty() && "Mismatched parentheses");
-			}
-			assert(operators.top().getValue() == "(" && "Expected '('");
-			operators.pop(); // Pop the '('
-			previous = Token(Token::PARENTHESIS, ')');
-		}
-		else
-		{
-			// uh oh
-			throw std::runtime_error("Invalid token: " + std::string(1, c));
-		}
-		firstIteration = false;
+			
 	}
 	
-	// Handle last token being a number
-	if(!number.empty())
+	if (output.size() != 1)
 	{
-		operands.push(Token(Token::NUMBER, number));
-		number.clear();
-		if(!firstIteration && isImpliedMultiplication(previous, isNum))
-		{
-			operands.push(Token(Token::OPERATOR, '*'));
-		}
-	}
-	
-	while(!operators.empty())
-	{
-		const auto op = operators.top();
-		operators.pop();
-		const auto numRight = operands.top();
-		operands.pop();
-		const auto numLeft = operands.top();
-		operands.pop();
+        throw std::runtime_error("Error: The expression is invalid.");
+    }
 
-		if (numRight.getType() == Token::OPERATOR) {
-			const auto result = performOperation(numRight, 0.0);
-			operands.push(Token(Token::NUMBER, std::to_string(result)));
-			const auto newNumRight = std::stold(operands.top().getValue());
-			operands.pop();
-			const auto result2 = performOperation(op, std::stold(numLeft.getValue()), newNumRight);
-			operands.push(Token(Token::NUMBER, std::to_string(result2)));
-		} else if (numLeft.getType() == Token::OPERATOR) {
-			const auto result = performOperation(numLeft, 0.0);
-			operands.push(Token(Token::NUMBER, std::to_string(result)));
-			const auto newNumLeft = std::stold(operands.top().getValue());
-			operands.pop();
-			const auto result2 = performOperation(op, newNumLeft, std::stold(numRight.getValue()));
-			operands.push(Token(Token::NUMBER, std::to_string(result2)));
-		} else {
-			const auto result = performOperation(op, std::stold(numLeft.getValue()), std::stold(numRight.getValue()));
-			operands.push(Token(Token::NUMBER, std::to_string(result)));
-		}
-	}
-
-
-
-
-	
-	return std::stold(operands.top().getValue());
+    return output.top();  // The result is the only element left in the stack
 }
