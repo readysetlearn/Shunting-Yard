@@ -136,6 +136,7 @@ void testEvaluator()
 	
     // Loop through each test case and check the result
     for (const auto& testCase : testCases) {
+		std::cout << std::endl;
         long double result = evaluatePostfix(shuntingYard(testCase.expression));
         if (result != testCase.expectedResult) {
             std::cout << "Failure: Expression \"" << testCase.expression 

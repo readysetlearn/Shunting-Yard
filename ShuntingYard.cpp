@@ -130,7 +130,6 @@ unsigned long long factorial(const unsigned long long n)
 
 long double performOperation(const Token op, const long double numLeft, const long double numRight = 0.0)
 {
-	std::cout << "op: " << op.getValue() << " numeLeft: " << numLeft << " numRight: " << numRight << std::endl;
     if(op.getType() != Token::OPERATOR)
     {
         throw std::invalid_argument("Token is not an operator: " + op.getValue());
@@ -369,14 +368,6 @@ long double evaluatePostfix(std::queue<Token> postfix)
 	
 	if (output.size() != 1)
 	{
-		std::cerr << "Error: The expression is invalid. Output stack contents: ";
-		std::stack<double> temp = output; // Create a copy to avoid modifying the original stack
-		while (!temp.empty())
-		{
-			std::cerr << temp.top() << " ";
-			temp.pop();
-		}
-		std::cerr << std::endl;
 		throw std::runtime_error("Error: The expression is invalid.");
 	}
 
