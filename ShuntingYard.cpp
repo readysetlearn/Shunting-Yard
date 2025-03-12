@@ -178,7 +178,7 @@ long double performOperation(const Token op, const long double numLeft, const lo
 
 
 
-/*converts an infinx expression to a postfix expression*/
+/* Converts an infinx expression to a postfix expression */
 std::queue<Token> shuntingYard(const std::string& expr)
 {
 	std::queue<Token> output;
@@ -217,24 +217,38 @@ std::queue<Token> shuntingYard(const std::string& expr)
 			output.push(Token(Token::OPERATOR, '!'));
 			previous = Token(Token::OPERATOR, '!');
 		}
-		else if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
+		else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
 		{
-			if(!number.empty())
+			if (!number.empty())
 			{
 				output.push(Token(Token::NUMBER, number));
 				number.clear();
 				previous = isNum;
 			}
-			// Determine whether token is unary negation or binary operator
-			Token t = (c == '-' && (firstIteration || previous.getType() != Token::NUMBER)) ? Token() : Token(Token::OPERATOR, c);
-			while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
+
+			// set isUnary to true if token is unary negation
+			bool isUnary = (c == '-' && (firstIteration || ( previous.getType() != Token::NUMBER && previous.getValue() != ")" && previous.getValue() != "!")));
+			
+			if(isUnary)
 			{
-				output.push(operators.top());
-				operators.pop();
+				// Call the default constructor which is used for unary negation
+				operators.push(Token()); 
 			}
-			operators.push(t);
-			previous = t;
+			else
+			{
+				Token t(Token::OPERATOR, c);
+				
+				while(!operators.empty() && operators.top().getValue() != "(" && (operators.top().getPrecedence() > t.getPrecedence() || (operators.top().getPrecedence() == t.getPrecedence() && t.getAssociativity() == Token::LEFT)))
+				{
+					output.push(operators.top());
+					operators.pop();
+				}
+				operators.push(t);
+			}
+
+			previous = Token(Token::OPERATOR, c); // Update previous to the current operator
 		}
+
 		else if(c == '(')
 		{
 			if(!number.empty())
@@ -305,6 +319,7 @@ std::queue<Token> shuntingYard(const std::string& expr)
 	return output;
 }
 
+/* Evaluates postfix expression and returns the result */
 long double evaluatePostfix(std::queue<Token> postfix)
 {
 	std::stack<double> output;
@@ -321,12 +336,10 @@ long double evaluatePostfix(std::queue<Token> postfix)
 		{
 			if(t.isUnary())
 			{
-				std::cout << "unary detected" << std::endl;
 				if(output.size() < 1) // Start of expression starts with unary negation
 				{
-					// If the first term is negative, add an implicit 0 at start e.g. -2+3 is 0-2+3
+					// If the first term is negative, add an implicit 0 at start e.g. -2+3 would be 0-2+3
 					const auto result = performOperation(Token(Token::OPERATOR, '-'), 0, std::stold(postfix.front().getValue())); // Can't use t here because it's the unary negation but we want binary subtraction
-					std::cout << "result: " << result << std::endl;
 					output.push(result);
 					postfix.pop();
 				}
@@ -335,15 +348,13 @@ long double evaluatePostfix(std::queue<Token> postfix)
 					const auto num = output.top(); 
 					output.pop(); // only pop one number for unary operation
 					const auto result = performOperation(t, num);
-					std::cout << "returned value after operation: " << result << std::endl;
 					output.push(result);
-					std::cout << "done operation" << std::endl;
 				}
 			}
 			else
 			{
 				if (output.size() < 2) {
-					throw std::runtime_error("Error: Insufficient values in the expression.");
+					throw std::runtime_error("Error: Insufficient values in the expression. Operator: " + t.getValue());
 				}
 				
 				const auto numRight = output.top();
@@ -358,8 +369,17 @@ long double evaluatePostfix(std::queue<Token> postfix)
 	
 	if (output.size() != 1)
 	{
-        throw std::runtime_error("Error: The expression is invalid.");
-    }
+		std::cerr << "Error: The expression is invalid. Output stack contents: ";
+		std::stack<double> temp = output; // Create a copy to avoid modifying the original stack
+		while (!temp.empty())
+		{
+			std::cerr << temp.top() << " ";
+			temp.pop();
+		}
+		std::cerr << std::endl;
+		throw std::runtime_error("Error: The expression is invalid.");
+	}
+
 
     return output.top();  // The result is the only element left in the stack
 }
