@@ -1,7 +1,27 @@
 # Shunting-Yard
 
 ## Overview
-Implementation of the [Shunting Yard algorithm](https://en.wikipedia.org/wiki/Shunting_yard_algorithm) in C++. Converts infinx expressions to [postfix expressions](https://en.wikipedia.org/wiki/Reverse_Polish_notation). 
+An implementation of the [Shunting Yard algorithm](https://en.wikipedia.org/wiki/Shunting_yard_algorithm) as well as a function to evaluate postfix expressions. The Shunting Yard algorithm is used to parse mathematical expressions specified in infix notation and convert them into postfix notation (aka [postfix expressions](https://en.wikipedia.org/wiki/Reverse_Polish_notation)). The postfix evaluation function then can be used to compute the result of the postfix expression.
+
+## Key Components
+
+1. **Shunting Yard Algorithm**:
+   - **Purpose**: Converts infix expressions to postfix expressions.
+   - **How it works**: The algorithm uses a stack to rearrange the operators and operands in the expression according to their precedence and associativity.
+   - **Example**:
+     ```plaintext
+     Input: 10 - 2 * 3
+     Output: 10 2 3 * -
+     ```
+
+2. **Postfix Evaluation Function**:
+   - **Purpose**: Evaluates postfix expressions to compute the final result.
+   - **How it works**: The function uses a stack to process the operands and operators in the postfix expression.
+   - **Example**:
+     ```plaintext
+     Input: 10 - 2 * 3
+     Output: 4
+     ```
 
 ## Features
 
@@ -10,16 +30,36 @@ Implementation of the [Shunting Yard algorithm](https://en.wikipedia.org/wiki/Sh
 - Supports parentheses: `(`, `)`
 - Supports multiplication between parentheses (e.g. `(3)(5)`, `3(5)` and `(3)5`)
 - Supports numbers with decimals (e.g., `2.3`)
-- Main function to call: `std::queue<Token> shuntingYard(std::string& expr)` located in `ShuntingYard.cpp`
+- Main functions to call: `std::queue<Token> shuntingYard(std::string& expr)` and `long double evaluatePostfix(std::queue<Token> postfix)` located in `ShuntingYard.cpp`
+
+## Usage
+
+To use these functions, simply include the respective header files and call the functions with the appropriate expressions.
+
+### Example Usage
+
+```cpp
+#include "ShuntingYard.cpp"
+#include <iostream>
+#include <queue>
+
+int main() {
+    std::string infix_expression = "10 - 2 * 3";
+    std::queue<Token> postfix_expression = shuntingYard(infix_expression);
+    long double result = evaluatePostfix(postfix_expression);
+    std::cout << "Result: " << result << std::endl;
+    // Output: Result: 4
+    return 0;
+}
+```
 
 ## Testing
 
-- A suite of test cases is provided to ensure the implementation is correct. Below are the steps for running the tests:
+- A suite of test cases are provided in `Test_Shunting_Yard.cpp` to ensure the implementation is correct. Below are the steps to run the tests:
 
 ### Running Tests
 
-```
-bash
+```bash
 g++ -o Test_Shunting_Yard Test_Shunting_Yard.cpp
 ./Test_Shunting_Yard
 ```
