@@ -98,17 +98,6 @@ class Token
 		}
 };
 
-/* Return true if an implicit multiplication exists between the previous token and the current one
-	Examples: (2)(3), 2(3), (2)3 */
-bool isImpliedMultiplication(const Token& pre, const Token& cur)
-{
-    if(pre.getValue() == ")" && cur.getValue() == "(") return true; // e.g. (2)(3)
-    if(pre.getType() == Token::NUMBER && cur.getValue() == "(") return true; // e.g. 2(3)
-    if(pre.getValue() == ")" && cur.getType() == Token::NUMBER) return true; // e.g. (2)3
-    if(pre.getValue() == "!" && cur.getValue() == "(") return true; // e.g. 3!(4)
-    if(pre.getValue() == ")" && cur.getValue() == "!") return true; // e.g. (4)3!
-	return false;
-}
 
 unsigned long long factorial(const unsigned long long n)
 {
@@ -162,7 +151,8 @@ long double performOperation(const Token op, const long double numLeft, const lo
             case '*':
                 return numLeft * numRight;
             case '/':
-                if (numRight == 0) {
+                if (numRight == 0)
+				{
                     throw std::runtime_error("Division by zero");
                 }
                 return numLeft / numRight;
@@ -184,8 +174,8 @@ std::queue<Token> shuntingYard(const std::string& expr)
 	std::stack<Token> operators;
 	std::string number;
 	Token previous = Token(Token::NUMBER, "-1"); // Arbitrary value for starting
-	bool firstIteration = true; // Used by isImpliedMultiplication()
 	const auto isNum = previous; // Arbitrary token with type number
+	bool firstIteration = true; // Used by isImpliedMultiplication()
 	
 	for(auto c : expr)
 	{
@@ -194,6 +184,10 @@ std::queue<Token> shuntingYard(const std::string& expr)
         }
 		if(std::isdigit(c) || c == '.')
 		{
+			if(!firstIteration && (previous.getValue() == ")" || previous.getValue() == "!"))// Check for implicit multiplication e.g. (2)3 is 2 * 3
+			{
+				operators.push(Token(Token::OPERATOR, '*')); 
+			}
 			if(!operators.empty() && operators.top().isUnary() && operators.top().getValue() == "-")
 			{
 				output.push(operators.top());
@@ -203,10 +197,6 @@ std::queue<Token> shuntingYard(const std::string& expr)
 		}
 		else if(c == '!') // Factorial has highest precedence and doesn't go on the operator stack
 		{
-			if(previous.getValue() == ")")
-			{
-				operators.push(Token(Token::OPERATOR, '*')); // Implicit multiplication e.g. (2)3!
-			}
 			if(!number.empty())
 			{
 				output.push(Token(Token::NUMBER, number));
@@ -225,7 +215,7 @@ std::queue<Token> shuntingYard(const std::string& expr)
 				previous = isNum;
 			}
 
-			// set isUnary to true if token is unary negation
+			// Set isUnary to true if token is unary negation
 			bool isUnary = (c == '-' && (firstIteration || ( previous.getType() != Token::NUMBER && previous.getValue() != ")" && previous.getValue() != "!")));
 			
 			if(isUnary)
@@ -261,7 +251,7 @@ std::queue<Token> shuntingYard(const std::string& expr)
 				output.push(operators.top());
 				operators.pop();
 			}
-			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, '(')))
+			if(!firstIteration && (previous.getType() == Token::NUMBER || previous.getValue() == "!" || previous.getValue() == ")")) // Check for implicit multiplication
 			{
 				operators.push(Token(Token::OPERATOR, '*'));
 			}
@@ -275,10 +265,6 @@ std::queue<Token> shuntingYard(const std::string& expr)
 				output.push(Token(Token::NUMBER, number));
 				number.clear();
 				previous = isNum;
-			}
-			if(!firstIteration && isImpliedMultiplication(previous, Token(Token::PARENTHESIS, ')')))
-			{
-				operators.push(Token(Token::OPERATOR, '*'));
 			}
 			while(operators.top().getValue() != "(")
 			{
@@ -303,10 +289,6 @@ std::queue<Token> shuntingYard(const std::string& expr)
 	{
 		output.push(Token(Token::NUMBER, number));
 		number.clear();
-		if(!firstIteration && isImpliedMultiplication(previous, isNum))
-		{
-			output.push(Token(Token::OPERATOR, '*'));
-		}
 	}
 	
 	while(!operators.empty())
@@ -353,7 +335,7 @@ long double evaluatePostfix(std::queue<Token> postfix)
 			else
 			{
 				if (output.size() < 2) {
-					throw std::runtime_error("Error: Insufficient values in the expression. Operator: " + t.getValue());
+					throw std::runtime_error("Insufficient values in the expression. Operator: " + t.getValue());
 				}
 				
 				const auto numRight = output.top();

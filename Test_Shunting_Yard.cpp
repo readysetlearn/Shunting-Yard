@@ -16,6 +16,8 @@ std::string queueToString(std::queue<Token> q)
     return result;
 }
 
+
+/* Test the functio std::queue<Token> shuntingYard(const std::string& expr) */
 void testShuntingYard()
 {
 	std::cout << "Now testing ShuntingYard function" << std::endl;
@@ -88,6 +90,7 @@ void testShuntingYard()
     }
 }
 
+/* Test the function long double evaluatePostfix(std::queue<Token> postfix) */
 void testEvaluator()
 {
 	std::cout << "Now testing evaluatePostfix function" << std::endl;
@@ -149,11 +152,40 @@ void testEvaluator()
     }
 }
 
-int main()
+/* Interactive mode to evaluate multiple expressions */
+void interactiveMode() {
+    std::string input;
+    std::cout << "Enter expressions to evaluate or type 'e' to exit:" << std::endl;
+    while(true)
+	{
+        std::cout << "> ";
+        std::getline(std::cin, input);
+        if (input == "e" || input == "exit") break;
+        try
+		{
+			const auto postfix = shuntingYard(input);
+            const auto result = evaluatePostfix(postfix);
+            std::cout << "Result: " << result << std::endl;
+        } 
+		catch(const std::exception& e)
+		{
+            std::cout << "Error: " << e.what() << std::endl;
+        }
+    }
+}
+
+int main(int argc, char *argv[])
 {
-	std::cout << "Tests started: " << std::endl;
-	testShuntingYard();
-	testEvaluator();
-	std::cout << "Done" << std::endl;
+	if (argc > 1 && (std::string(argv[1]) == "--interactive" || std::string(argv[1]) == "-i")) 
+	{// Enter interactive mode
+        interactiveMode();
+    }
+	else
+	{// Run tests
+		std::cout << "Tests started: " << std::endl;
+		testShuntingYard();
+		testEvaluator();
+		std::cout << "Done" << std::endl;
+	}
 	return 0;
 }
