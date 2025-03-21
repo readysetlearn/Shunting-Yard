@@ -17,7 +17,7 @@ std::string queueToString(std::queue<Token> q)
 }
 
 
-/* Test the functio std::queue<Token> shuntingYard(const std::string& expr) */
+/* Test the function std::queue<Token> shuntingYard(const std::string& expr) */
 void testShuntingYard()
 {
 	std::cout << "Now testing ShuntingYard function" << std::endl;
@@ -187,5 +187,6 @@ int main(int argc, char *argv[])
 		testEvaluator();
 		std::cout << "Done" << std::endl;
 	}
+		
 	return 0;
 }

@@ -66,4 +66,4 @@ g++ -o Test_Shunting_Yard Test_Shunting_Yard.cpp
 
 
 ## Known Limitations
-- Input expressions are not validated for correctness. For example, `^5` has ouptut `5^` without any errors.
+- The `shuntingYard` function does not validate input for correctness. For example, `^5` has output `5^` and `3 ** 4` has the output `3 * 4 *` without any errors.
