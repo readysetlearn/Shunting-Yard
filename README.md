@@ -25,7 +25,7 @@ An implementation of the [Shunting Yard algorithm](https://en.wikipedia.org/wiki
 
 ## Features
 
-- Supports the following binary operators: `+`, `-`, `*`, `/`, `^`
+- Supports the following binary operators: `+`, `-`, `*`, `/`, `%` (modulo), `^`
 - Supports the following unary operators: `-`, `!`
 - Supports parentheses: `(`, `)`
 - Supports multiplication between parentheses (e.g. `(3)(5)`, `3(5)` and `(3)5`)

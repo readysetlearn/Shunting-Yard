@@ -65,6 +65,7 @@ class Token
 					return 1;
 				case '*':
 				case '/':
+				case '%':
 					return 2;
 				case '^':
 					return 3;
@@ -85,6 +86,7 @@ class Token
 				case '+':
 				case '-':
 				case '*':
+				case '%':
 				case '/':
 				case '(':
 				case ')':
@@ -151,11 +153,17 @@ long double performOperation(const Token op, const long double numLeft, const lo
             case '*':
                 return numLeft * numRight;
             case '/':
-                if (numRight == 0)
+                if(numRight == 0)
 				{
                     throw std::runtime_error("Division by zero");
                 }
                 return numLeft / numRight;
+			case '%':
+				if(ceil(numLeft) != floor(numLeft) || ceil(numRight) != floor(numRight)) // check if operands only have integer value
+				{
+					throw std::invalid_argument("Operand for % is not an integer.");
+				}
+				return static_cast<long long>(numLeft) % static_cast<long long>(numRight);
             case '^':
                 return pow(numLeft, numRight);
             default:
@@ -206,7 +214,7 @@ std::queue<Token> shuntingYard(const std::string& expr)
 			output.push(Token(Token::OPERATOR, '!'));
 			previous = Token(Token::OPERATOR, '!');
 		}
-		else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
+		else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '^')
 		{
 			if (!number.empty())
 			{
